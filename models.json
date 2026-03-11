@@ -1,0 +1,10 @@
+{
+    "orchestrator": "gpt-4.1",
+    "file_manager": "gpt-4.1-mini",
+    "coder": "gpt-4.1",
+    "tester": "gpt-4.1-mini",
+    "debugger": "gpt-4.1",
+    "sql_analyst": "gpt-4.1-mini",
+    "reviewer": "gpt-4.1",
+    "documenter": "gpt-4.1-mini"
+}
