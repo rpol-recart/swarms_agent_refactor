@@ -712,19 +712,30 @@ def create_agent(
     model_name: Optional[str] = None,
     temperature: float = 0.1,
     db_tools: Optional[DatabaseTools] = None,
+    api_base: Optional[str] = None,
 ) -> Agent:
     """Создает агента по роли с правильной конфигурацией.
 
     Args:
         role: Роль агента.
         model_name: Имя модели LLM (если None — берётся из DEFAULT_MODEL_MAP).
+            Для локальных LLM используйте формат ``openai/<model>`` (vLLM,
+            llama.cpp, LM Studio) или ``ollama/<model>`` (Ollama).
         temperature: Температура генерации.
         db_tools: Инструменты БД для SQL-агента.
+        api_base: URL локального LLM-сервера, например
+            ``http://localhost:8000/v1``.  Если задан, будет установлен через
+            переменную окружения ``OPENAI_API_BASE`` (для провайдера ``openai/``).
 
     Returns:
         Сконфигурированный объект Agent.
     """
     resolved_model = model_name or DEFAULT_MODEL_MAP.get(role.value, "gpt-4.1-mini")
+
+    # Настройка локального LLM-сервера через переменные окружения
+    if api_base:
+        os.environ.setdefault("OPENAI_API_BASE", api_base)
+        os.environ.setdefault("OPENAI_API_KEY", "local-dummy-key")
 
     # Для SQL агента добавляем инструменты БД
     if role == AgentRole.SQL_ANALYST:
@@ -762,11 +773,13 @@ class RefactoringOrchestrator:
         project_path: str,
         db_connection: Optional[str] = None,
         model_configs: Optional[Dict[str, str]] = None,
+        api_base: Optional[str] = None,
     ):
         self.project_path = os.path.abspath(project_path)
         self.context = ProjectContext(root_path=self.project_path)
         self.proposals: List[RefactoringProposal] = []
         self.approved_changes: List[Dict[str, Any]] = []
+        self.api_base = api_base
 
         self.model_configs: Dict[str, str] = {
             **DEFAULT_MODEL_MAP,
@@ -802,6 +815,7 @@ class RefactoringOrchestrator:
                 role=role,
                 model_name=model,
                 db_tools=self.db_tools,
+                api_base=self.api_base,
             )
         logger.info("Агенты инициализированы: %s", list(self.agents.keys()))
 
@@ -1203,6 +1217,10 @@ def main() -> None:
     parser.add_argument(
         "--model-config", "-m", help="JSON файл с конфигурацией моделей"
     )
+    parser.add_argument(
+        "--api-base",
+        help="URL локального LLM-сервера (например http://localhost:8000/v1)",
+    )
 
     args = parser.parse_args()
 
@@ -1217,6 +1235,7 @@ def main() -> None:
         project_path=args.path,
         db_connection=args.db,
         model_configs=model_configs,
+        api_base=args.api_base,
     )
 
     # Базовые правила
