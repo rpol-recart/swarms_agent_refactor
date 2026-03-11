@@ -695,6 +695,24 @@ response = agent.run("Объясни машинное обучение прос�
 
 ### vLLM / llama.cpp / LM Studio (OpenAI-совместимый API)
 
+**Способ 1 — через параметры Agent (рекомендуется):**
+
+```python
+from swarms import Agent
+
+agent = Agent(
+    agent_name="vLLM-Agent",
+    model_name="openai/Qwen2.5-32B-Instruct",  # префикс openai/
+    llm_base_url="http://localhost:8000/v1",    # URL локального сервера
+    llm_api_key="dummy",                        # любое значение
+    system_prompt="Ты — кодер-эксперт.",
+    max_loops=1,
+)
+response = agent.run("Напиши функцию сортировки на Python")
+```
+
+**Способ 2 — через переменные окружения:**
+
 ```bash
 export OPENAI_API_BASE=http://localhost:8000/v1
 export OPENAI_API_KEY=dummy
@@ -705,7 +723,7 @@ from swarms import Agent
 
 agent = Agent(
     agent_name="vLLM-Agent",
-    model_name="openai/Qwen2.5-32B-Instruct",  # префикс openai/
+    model_name="openai/Qwen2.5-32B-Instruct",
     system_prompt="Ты — кодер-эксперт.",
     max_loops=1,
 )
